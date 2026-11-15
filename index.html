@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cricket Scoreboard Simulator</title>
+  <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+
+<body>
+
+  <header class="app-header">
+    <h1>Cricket Scoreboard Simulator</h1>
+  </header>
+
+  <main class="container">
+
+    <section id="setupSection" class="card">
+      <h2>Match setup</h2>
+
+      <div class="grid-3">
+        <label class="field">
+          <span>Batting team</span>
+          <input type="text" id="battingTeam" maxlength="30" placeholder="Team name">
+        </label>
+        <label class="field">
+          <span>Bowling team</span>
+          <input type="text" id="bowlingTeam" maxlength="30" placeholder="Team name">
+        </label>
+        <label class="field">
+          <span>Total overs (1 to 50)</span>
+          <input type="number" id="totalOvers" min="1" max="50" step="1" value="5">
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <label class="field">
+          <span>Batters, one per line, in batting order (2 to 11)</span>
+          <textarea id="batterList" rows="8"
+            placeholder="First opener&#10;Second opener&#10;Number 3&#10;..."></textarea>
+        </label>
+        <label class="field">
+          <span>Bowlers, one per line (at least 2)</span>
+          <textarea id="bowlerList" rows="8" placeholder="Bowler 1&#10;Bowler 2&#10;..."></textarea>
+        </label>
+      </div>
+
+      <p id="setupError" class="error" role="alert"></p>
+
+      <div class="btn-row">
+        <button type="button" id="startBtn" class="btn primary">Start match</button>
+        <button type="button" id="sampleBtn" class="btn">Fill sample data</button>
+      </div>
+    </section>
+
+    <section id="scoreboardSection" class="hidden">
+
+      <div class="scoreboard">
+        <div class="sb-top">
+          <div>
+            <div id="teamName" class="team-name"></div>
+            <div id="vsText" class="vs-text"></div>
+          </div>
+          <div class="sb-score">
+            <span id="scoreText">0/0</span>
+            <span id="oversText" class="sb-overs">(0.0)</span>
+          </div>
+        </div>
+
+        <div id="chaseInfo" class="chase-info hidden"></div>
+
+        <div class="sb-stats">
+          <div class="stat"><span class="stat-label">Match length</span><b id="oversLimit">-</b></div>
+          <div class="stat"><span class="stat-label">Run rate</span><b id="runRate">0.00</b></div>
+          <div class="stat"><span class="stat-label">Extras</span><b id="extrasTotal">0</b></div>
+          <div class="stat"><span class="stat-label">Bowler</span><b id="currentBowlerText">-</b></div>
+        </div>
+
+        <div class="over-line">
+          <span id="overCaption" class="stat-label">This over</span>
+          <div id="overChips" class="chips"></div>
+        </div>
+      </div>
+
+      <div id="resultBanner" class="banner hidden" role="status"></div>
+
+      <div id="inningsBreakPanel" class="card hidden">
+        <h2>Start the second innings</h2>
+        <p id="inningsBreakNote" class="note"></p>
+        <div class="grid-2">
+          <label class="field">
+            <span id="batterList2Label">Batters</span>
+            <textarea id="batterList2" rows="8"></textarea>
+          </label>
+          <label class="field">
+            <span id="bowlerList2Label">Bowlers</span>
+            <textarea id="bowlerList2" rows="8"></textarea>
+          </label>
+        </div>
+        <p id="setupError2" class="error" role="alert"></p>
+        <div class="btn-row">
+          <button type="button" id="startSecondBtn" class="btn primary">Start second innings</button>
+        </div>
+      </div>
+
+      <div id="bowlerPanel" class="card hidden">
+        <h2>Choose the bowler</h2>
+        <p id="bowlerPrompt" class="note"></p>
+        <div class="btn-row">
+          <select id="bowlerSelect" aria-label="Bowler for the next over"></select>
+          <button type="button" id="confirmBowlerBtn" class="btn primary">Start over</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Score the ball</h2>
+
+        <div class="run-buttons">
+          <button type="button" class="btn run" data-runs="0">0</button>
+          <button type="button" class="btn run" data-runs="1">1</button>
+          <button type="button" class="btn run" data-runs="2">2</button>
+          <button type="button" class="btn run" data-runs="3">3</button>
+          <button type="button" class="btn run four" data-runs="4">4</button>
+          <button type="button" class="btn run six" data-runs="6">6</button>
+        </div>
+
+        <div class="extras-row">
+          <label class="inline-field">
+            <span>Runs with the extra</span>
+            <select id="extraRuns">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </label>
+          <button type="button" class="btn extra" data-extra="wide">Wide</button>
+          <button type="button" class="btn extra" data-extra="noball">No-ball</button>
+          <button type="button" class="btn extra" data-extra="bye">Bye</button>
+          <button type="button" class="btn extra" data-extra="legbye">Leg-bye</button>
+        </div>
+        <p class="note">
+          Wide and no-ball add 1 penalty run on their own. The number above is any additional runs:
+          for a wide, runs run on top of the penalty; for a no-ball, runs hit off the bat;
+          for a bye or leg-bye, the runs run (at least 1).
+        </p>
+
+        <div class="btn-row">
+          <button type="button" id="wicketBtn" class="btn danger">Wicket</button>
+          <button type="button" id="undoBtn" class="btn">Undo last ball</button>
+          <button type="button" id="resetBtn" class="btn">Reset and new match</button>
+        </div>
+
+        <p id="statusMsg" class="status" role="status"></p>
+      </div>
+
+      <div id="wicketPanel" class="card hidden">
+        <h2>Wicket details</h2>
+        <div class="grid-3">
+          <label class="field">
+            <span>How was the batter out?</span>
+            <select id="dismissalType">
+              <option value="Bowled">Bowled</option>
+              <option value="Caught">Caught</option>
+              <option value="LBW">LBW</option>
+              <option value="Stumped">Stumped</option>
+              <option value="Hit wicket">Hit wicket</option>
+              <option value="Run out">Run out</option>
+            </select>
+          </label>
+          <label class="field hidden" id="runOutWhoField">
+            <span>Which batter is out?</span>
+            <select id="runOutWho">
+              <option value="striker"></option>
+              <option value="non"></option>
+            </select>
+          </label>
+          <label class="field hidden" id="runOutRunsField">
+            <span>Runs completed before the run out</span>
+            <select id="runOutRuns">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </label>
+        </div>
+        <div class="btn-row">
+          <button type="button" id="confirmWicketBtn" class="btn danger">Confirm wicket</button>
+          <button type="button" id="cancelWicketBtn" class="btn">Cancel</button>
+        </div>
+      </div>
+
+      <div class="tables-grid">
+        <div class="card">
+          <h2>Batting</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Batter</th>
+                  <th>Status</th>
+                  <th class="num">R</th>
+                  <th class="num">B</th>
+                  <th class="num">4s</th>
+                  <th class="num">6s</th>
+                  <th class="num">SR</th>
+                </tr>
+              </thead>
+              <tbody id="battingBody"></tbody>
+            </table>
+          </div>
+          <p id="extrasDetail" class="note"></p>
+          <p id="fowText" class="note"></p>
+        </div>
+
+        <div class="card">
+          <h2>Bowling</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Bowler</th>
+                  <th class="num">O</th>
+                  <th class="num">R</th>
+                  <th class="num">W</th>
+                  <th class="num">Econ</th>
+                </tr>
+              </thead>
+              <tbody id="bowlingBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="firstInningsCard" class="card hidden first-card">
+        <details>
+          <summary id="firstInningsSummary"></summary>
+          <div id="firstInningsBody"></div>
+        </details>
+      </div>
+
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <!-- <p>Built with HTML, CSS and JavaScript. No data leaves your browser.</p> -->
+  </footer>
+
+  <script src="./assets/js/script.js"></script>
+</body>
+
+</html>
